@@ -1,5 +1,14 @@
 #!/usr/bin/env lua
 
+--[[
+
+Copyright © 2015 Jon Allen <ylixir@gmail.com>
+This work is free. You can redistribute it and/or modify it under the
+terms of the Do What The Fuck You Want To Public License, Version 2,
+as published by Sam Hocevar. See the COPYING file for more details.
+
+]]--
+
 --[[ these are the functions that we will be using ]]--
 local main, menu, download, load, generate, show, get_random_byte
 
@@ -12,6 +21,7 @@ local phrase_length, list, random_letter
 --[[ the word lists and supporting data are stored here ]]--
 local lists
 
+--[[ this is the base object, just a simple thing to allow inheritance ]]--
 object = {}
 function object:new()
   local o = {}
@@ -23,7 +33,7 @@ function object:new()
   return o
 end
 
---[[ naturally we need some dice to roll ]]--
+--[[ naturally we need some dice objects to roll ]]--
 protodice = object:new()
 protodice.sides  = 6
 protodice.throws = 1
@@ -61,8 +71,7 @@ function protodice:roll()
   return r+1 --silly lua starts counting at one
 end
 
---[[ this program chooses words from a list so we need a list object prototype
-]]--
+--[[ each word list is inherited from this generic word list ]]--
 protolist = object:new()
 protolist.dice = protodice:new()
 protolist.source = 'http://world.std.com/~reinhold/'
@@ -71,8 +80,7 @@ protolist.file = 'filename.txt'
 protolist.skip = 0 --the number of lines at the beginning of the file to skip
 protolist.padding = 0 --the number of useless bytes at the front of each line
 protolist.loaded = false --whether this list has been loaded from the disk
-
---each list needs it's own set of dice and it's own words
+--[[ each list needs it's own set of dice and it's own words ]]--
 function protolist:new()
   local o = self.parent.new(self)
   o.dice = protodice:new()
@@ -80,10 +88,8 @@ function protolist:new()
   return o
 end
 
---[[
-and these are the actual lists available
-]]--
-local lists = {}
+--[[ and these are the actual lists available ]]--
+lists = {}
 
 lists.beale = protolist:new()
 lists.beale.file = 'beale.wordlist.asc'
