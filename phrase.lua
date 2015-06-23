@@ -176,12 +176,12 @@ function generate()
     dice.throws = 1
     
     dice.sides = #letter_list
-    letter = letter_list[dice:roll()]
+    letter = string.char(letter_list[dice:roll()])
     
     dice.sides = phrase_length
     word = dice:roll()
     
-    dice.sides  = #phrase[word]+1
+    dice.sides  = #(phrase[word])+1
     place = dice:roll()
     
     if 1 == place then
