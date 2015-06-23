@@ -42,8 +42,6 @@ function protodice:roll()
   local max_roll  = self.sides^self.throws
   local bytes     = math.ceil(math.log(max_roll,256))
   local bits      = math.ceil(math.log(max_roll,2))
-  local max_rand  = 256^bytes
-  local max_bits  = 2^bits
   
   --first we get a random number that is at least as large as we want
   --but that is no more than a byte too large
@@ -54,21 +52,25 @@ function protodice:roll()
   end
   
   --[[
-  now r may be a little to large
-  
-  we shrink r in two stages to avoid messing with binary friendly dice
-  
-  we also assume that all ranges have equal probability, so arbitrarily
+  assume that all digits have equal entropy, so arbitrarily
   removing digits will not affect the quality of our random numbers
   ]]--
   
-  --first we trim off extra bits to map r from [0,max_rand) to [0,max_bits)
-  r = bit32.extract(r,0,bits-1)
-  --use regular multiplication to map it from [0,max_bits) to [0,max_roll)
-  r = r * (max_roll/max_bits)
+  --trim off extra bits and add one to map r from [0,2^bytes) to [1,2^bits]
+  r = bit32.extract(r,0,bits-1) + 1
   
-  --whew, done
-  return r+1 --silly lua starts counting at one
+  --[[
+  Mapping from [1,2^bits] to [1,max_roll] with multiplication could cause
+  certain integers to be more likely. All numbers have equal probability, so
+  tossing bad numbers should not affect the quality of our randomness. Instead
+  of complicating the logic of the function, we will just recurse if we fail to
+  get a number in range.
+  ]]--
+  if r > max_roll then
+    return self:roll() --try again
+  else
+    return r --yay we win
+  end
 end
 
 --[[ each word list is inherited from this generic word list ]]--
@@ -112,7 +114,7 @@ lists.diceware8k.dice.throws = 13
 
 -- !"#$%&'()*+,-./0123456789:;<=>?@
 letter_list = {}
-for i=1,32 do letter_list[i] = 0x20 + i end
+for i=1,32 do letter_list[i] = string.char(0x20 + i) end
 
 --everything starts here
 function main()
@@ -176,12 +178,12 @@ function generate()
     dice.throws = 1
     
     dice.sides = #letter_list
-    letter = string.char(letter_list[dice:roll()])
+    letter = letter_list[dice:roll()]
     
     dice.sides = phrase_length
     word = dice:roll()
     
-    dice.sides  = #(phrase[word])+1
+    dice.sides  = string.len(phrase[word])+1
     place = dice:roll()
     
     if 1 == place then
