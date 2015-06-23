@@ -19,7 +19,7 @@ local object, protodice, protolist
 local phrase_length, list, random_letter
 
 --[[ the word lists and supporting data are stored here ]]--
-local lists
+local lists, letter_list
 
 --[[ this is the base object, just a simple thing to allow inheritance ]]--
 object = {}
@@ -110,6 +110,9 @@ lists.diceware8k.file = 'diceware8k.txt'
 lists.diceware8k.dice.sides = 2
 lists.diceware8k.dice.throws = 13
 
+-- !"#$%&'()*+,-./0123456789:;<=>?@
+letter_list = {}
+for i=1,32 do letter_list[i] = 0x20 + i end
 
 --everything starts here
 function main()
@@ -167,6 +170,29 @@ function generate()
   local phrase = {}
   for i = 1,phrase_length do phrase[i] = list.words[list.dice:roll()] end
   
+  if true == random_letter then
+    local dice, letter, word, place
+    dice = protodice:new()
+    dice.throws = 1
+    
+    dice.sides = #letter_list
+    letter = letter_list[dice:roll()]
+    
+    dice.sides = phrase_length
+    word = dice:roll()
+    
+    dice.sides  = #phrase[word]+1
+    place = dice:roll()
+    
+    if 1 == place then
+      phrase[word] = letter..phrase[word]
+    elseif #phrase[word]+1 == place then
+      phrase[word] = phrase[word]..letter
+    else
+      phrase[word] = string.sub(phrase[word],1,place-1)
+                     ..letter ..string.sub(phrase[word],place,-1)
+    end
+  end
   return phrase
 end
 
