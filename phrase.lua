@@ -10,85 +10,18 @@ as published by Sam Hocevar. See the COPYING file for more details.
 ]]--
 
 --[[ these are the functions that we will be using ]]--
-local main, menu, download, load, generate, show, get_random_byte
+local main, menu, download, load, generate, show
 
 --[[ these are the 'classes' we will use ]]--
-local object, protodice, protolist
+local object = require 'object'
+local protodice = require 'dice'
+local protolist = require 'list'
 
 --[[ the defaults are stored in these variables ]]--
 local phrase_length, list, random_letter
 
 --[[ the word lists and supporting data are stored here ]]--
 local lists, letter_list
-
---[[ this is the base object, just a simple thing to allow inheritance ]]--
-object = {}
-function object:new()
-  local o = {}
-  for k,v in pairs(self) do o[k] = v end
-  setmetatable(o,self)
-  self.__index = self
-  
-  o.parent = self
-  return o
-end
-
---[[ naturally we need some dice objects to roll ]]--
-protodice = object:new()
-protodice.sides  = 6
-protodice.throws = 1
-function protodice:roll()
-  local r         = 0
-  local max_roll  = self.sides^self.throws
-  local bytes     = math.ceil(math.log(max_roll,256))
-  local bits      = math.ceil(math.log(max_roll,2))
-  
-  --first we get a random number that is at least as large as we want
-  --but that is no more than a byte too large
-  for i=0,bytes-1 do
-    --but each byte in it's proper place in the number
-    --this is like how 256=2*10^2+5*10^1+6*10^0
-    r = r + get_random_byte()*256^i
-  end
-  
-  --[[
-  assume that all digits have equal entropy, so arbitrarily
-  removing digits will not affect the quality of our random numbers
-  ]]--
-  
-  --trim off extra bits and add one to map r from [0,2^bytes) to [1,2^bits]
-  r = bit32.extract(r,0,bits-1) + 1
-  
-  --[[
-  Mapping from [1,2^bits] to [1,max_roll] with multiplication could cause
-  certain integers to be more likely. All numbers have equal probability, so
-  tossing bad numbers should not affect the quality of our randomness. Instead
-  of complicating the logic of the function, we will just recurse if we fail to
-  get a number in range.
-  ]]--
-  if r > max_roll then
-    return self:roll() --try again
-  else
-    return r --yay we win
-  end
-end
-
---[[ each word list is inherited from this generic word list ]]--
-protolist = object:new()
-protolist.dice = protodice:new()
-protolist.source = 'http://world.std.com/~reinhold/'
-protolist.words = {}
-protolist.file = 'filename.txt'
-protolist.skip = 0 --the number of lines at the beginning of the file to skip
-protolist.padding = 0 --the number of useless bytes at the front of each line
-protolist.loaded = false --whether this list has been loaded from the disk
---[[ each list needs it's own set of dice and it's own words ]]--
-function protolist:new()
-  local o = self.parent.new(self)
-  o.dice = protodice:new()
-  o.words = {}
-  return o
-end
 
 --[[ and these are the actual lists available ]]--
 lists = {}
@@ -123,8 +56,9 @@ function main()
   random_letter = true --insert a random letter into the phrase?
 
   while true do
-    menu({
-      ['Download the word lists']=download,
+    menu
+    ({
+      ['Update the word lists']=function() dofile('update.lua') end,
       ['Generate a pass phrase']=function() show(generate()) end,
       ['Quit']=os.exit
     })
@@ -143,6 +77,7 @@ function menu(choices)
   indexes[io.read('*n')]()
 end
 
+--[[
 --download the word lists using wget
 function download()
   for k,v in pairs(lists) do
@@ -164,7 +99,7 @@ function load()
   flist:close()
   list.loaded = true
 end
-
+]]--
 function generate()
   --first read the diceware list into memory
   if false == list.loaded then load() end
@@ -204,21 +139,6 @@ function show(phrase)
     io.write(v)
   end
   io.write('\n')
-end
-
---[[
-we can't do anything without some entropy
-
-please note that this function will block if there is not enough entropy
-
-if the program locks up, just wiggle the mouse or surf the internet or
-something until it has enough randomness to move on
-]]--
-function get_random_byte()
-  local frand=assert(io.open('/dev/random','rb'))
-  local r = frand:read(1):byte(1)
-  frand:close()
-  return r
 end
 
 --lets do this thing
