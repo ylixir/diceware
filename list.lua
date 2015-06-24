@@ -29,12 +29,21 @@ P.dice = protodice:new()
 P.words = {}
 P.loaded = false --whether this list has been loaded from the disk
 
---[[ each list needs it's own set of dice and it's own words ]]--
+--[[ each list needs it's own set of dice ]]--
 function P:new()
   local o = self.parent.new(self)
   o.dice = protodice:new()
-  o.words = {}
   return o
+end
+
+function P:load(filename)
+  self.words = {} --replace any list loaded, don't append more words
+  for l in io.lines(filename) do
+    self.words[#self.words+1]=l
+  end
+  self.dice.sides = #self.words
+  self.dice.throws = 1
+  self.loaded = true
 end
 
 return P

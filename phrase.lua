@@ -10,7 +10,7 @@ as published by Sam Hocevar. See the COPYING file for more details.
 ]]--
 
 --[[ these are the functions that we will be using ]]--
-local main, menu, download, load, generate, show
+local main, menu, load, generate, show
 
 --[[ these are the 'classes' we will use ]]--
 local object = require 'object'
@@ -26,24 +26,9 @@ local lists, letter_list
 --[[ and these are the actual lists available ]]--
 lists = {}
 
-lists.beale = protolist:new()
-lists.beale.file = 'beale.wordlist.asc'
-lists.beale.dice.sides = 6
-lists.beale.dice.throws = 5
-lists.beale.skip = 2
-lists.beale.padding = 7
-
-lists.diceware = protolist:new()
-lists.diceware.file = 'diceware.wordlist.asc'
-lists.diceware.dice.sides = 6
-lists.diceware.dice.throws = 5
-lists.diceware.skip = 2
-lists.diceware.padding = 7
-
-lists.diceware8k = protolist:new()
-lists.diceware8k.file = 'diceware8k.txt'
-lists.diceware8k.dice.sides = 2
-lists.diceware8k.dice.throws = 13
+lists['beale.list'] = protolist:new()
+lists['diceware8k.list'] = protolist:new()
+lists['diceware.list'] = protolist:new()
 
 -- !"#$%&'()*+,-./0123456789:;<=>?@
 letter_list = {}
@@ -52,13 +37,16 @@ for i=1,32 do letter_list[i] = string.char(0x20 + i) end
 --everything starts here
 function main()
   phrase_length = 7
-  list = lists.diceware8k
+  list = lists['diceware8k.list']
   random_letter = true --insert a random letter into the phrase?
 
+  --just load the lists so we don't have to deal with it
+  load()
+  
   while true do
     menu
     ({
-      ['Update the word lists']=function() dofile('update.lua') end,
+      ['Update the word lists']=function() dofile('update.lua') load() end,
       ['Generate a pass phrase']=function() show(generate()) end,
       ['Quit']=os.exit
     })
@@ -77,32 +65,8 @@ function menu(choices)
   indexes[io.read('*n')]()
 end
 
---[[
---download the word lists using wget
-function download()
-  for k,v in pairs(lists) do
-    --if you are super paranoid then this command probably routes through two
-    --external programs. namely the shell and wget.
-    os.execute('/bin/env wget -O '..v.file..' '..v.source..v.file)
-    v.loaded = false
-  end
-end
-
-function load()
-  local flist=assert(io.open(list.file,'r'))
-  --just dump any trash at the beginning of the file
-  if list.skip > 0 then for i=1,list.skip do flist:read('*l') end end
-  --read in the word list
-  for i=1,list.dice.sides^list.dice.throws do
-    list.words[i]=flist:read('*l'):sub(list.padding)
-  end
-  flist:close()
-  list.loaded = true
-end
-]]--
 function generate()
   --first read the diceware list into memory
-  if false == list.loaded then load() end
   
   local phrase = {}
   for i = 1,phrase_length do phrase[i] = list.words[list.dice:roll()] end
@@ -118,7 +82,7 @@ function generate()
     dice.sides = phrase_length
     word = dice:roll()
     
-    dice.sides  = string.len(phrase[word])+1
+    dice.sides  = #phrase[word]+1
     place = dice:roll()
     
     if 1 == place then
@@ -139,6 +103,13 @@ function show(phrase)
     io.write(v)
   end
   io.write('\n')
+end
+
+--(re)load all the lists from disk
+function load()
+  for k,v in pairs(lists) do
+    v:load(k) --we conveniently stored each word list under it's filename
+  end
 end
 
 --lets do this thing
