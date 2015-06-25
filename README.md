@@ -29,7 +29,7 @@ The second set have been formatted to contain one word per line and contain noth
 
 ## Informational files
 * COPYING
-  The license for this software. I am using the [WTFPL](www.wtfpl.net)
+  The license for this software. I am using the [WTFPL](http://www.wtfpl.net)
 * README.md
   This is what you are reading
 
