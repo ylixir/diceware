@@ -39,7 +39,7 @@ end
 function P:load(filename)
   self.words = {} --replace any list loaded, don't append more words
   for l in io.lines(filename) do
-    self.words[#self.words+1]=l
+    table.insert(self.words, l)
   end
   self.dice.sides = #self.words
   self.dice.throws = 1

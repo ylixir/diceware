@@ -82,7 +82,7 @@ end
 function menu(choices)
   local indexes = {}
   for item,func in pairs(choices) do
-    indexes[#indexes+1] = func
+    table.insert(indexes,func)
     print(#indexes..' '..item)
   end
   io.write('Enter your choice: ')
