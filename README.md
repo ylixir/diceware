@@ -12,10 +12,14 @@ This software is meant to do two things.
 [The Diceware Passphrase Home Page](http://world.std.com/~reinhold/diceware.html)
 2. Allow anyone to easily read the source and gain trust for the software
 
+# See also
+* I found a blog post with a perl script that does the same thing as this
+at [nullprogram.com](http://nullprogram.com/blog/2009/02/07/)
 # TODO
 * Add an option to specify the random device
 * Add command line options
 * Add a progress indicator (/proc/sys/kernel/random/entropy_avail)
+* Add [dialware list](http://nullprogram.com/blog/2009/02/07/)
 
 # Files
 I have broken the project into many small files.
