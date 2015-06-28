@@ -12,6 +12,11 @@ This software is meant to do two things.
 [The Diceware Passphrase Home Page](http://world.std.com/~reinhold/diceware.html)
 2. Allow anyone to easily read the source and gain trust for the software
 
+# TODO
+* Add an option to specify the random device
+* Add command line options
+* Add a progress indicator (/proc/sys/kernel/random/entropy_avail)
+
 # Files
 I have broken the project into many small files.
 This makes each component easier to digest, but it's a lot of files.
